@@ -37,7 +37,7 @@ def create_initial_state(size):
     global smoke_life, water_amount
     grid = np.random.choice([EMPTY, WALL, SAND, WOOD, FIRE, WATER],
                             size=(size, size),
-                            p=[0.2, 0.2, 0.1, 0.2, 0.1, 0.2])
+                            p=[0.2, 0.2, 0.1, 0.1, 0.1, 0.3])
 
     global smoke_life  # Spremenljivko označi kot globalno
     smoke_life = np.zeros((size, size), dtype=int)
@@ -71,31 +71,50 @@ def generate_next_gen(grid, steps, water_amount):
                 continue  # Wall stays in the same place
 
             if grid[i, j] == SAND:
-                # 1. Če je pod peskom prazen prostor, pade naravnost dol
+                # 1️⃣ Če je pod peskom prazen prostor, pade naravnost dol
                 if i < grid.shape[0] - 1 and grid[i + 1, j] == EMPTY:
                     new_grid[i, j] = EMPTY
                     new_grid[i + 1, j] = SAND
 
-                # 2. Če se ne more premakniti naravnost dol, preveri diagonalno
+                # 2️⃣ Če je pod peskom voda → Pesek izpodrine vodo
+                elif i < grid.shape[0] - 1 and grid[i + 1, j] == WATER:
+                    moved = False
+
+                    # Poskusi izpodriniti vodo levo/desno
+                    directions = [(0, -1), (0, 1)]
+                    np.random.shuffle(directions)
+
+                    for di, dj in directions:
+                        ni, nj = i + 1, j + dj
+
+                        if 0 <= nj < grid.shape[1] and grid[ni, nj] == EMPTY:
+                            # Premakni vodo levo/desno
+                            new_grid[ni, nj] = WATER
+                            new_grid[i + 1, j] = SAND
+                            moved = True
+                            break  # Ko pesek izrine vodo, ne preverja več
+
+                    # 3️⃣ Če ni možnosti za premik levo/desno → Zamenja mesto z vodo
+                    if not moved:
+                        new_grid[i, j] = WATER
+                        new_grid[i + 1, j] = SAND
+
+                # 4️⃣ Če se ne more premakniti navzdol → Preveri diagonalno premikanje
                 else:
-                    # 3. Poskusi najprej naključno levo ali desno (daje bolj naraven efekt)
                     directions = [(1, -1), (1, 1)]
                     np.random.shuffle(directions)
 
                     for di, dj in directions:
                         ni, nj = i + di, j + dj
-
-                        # Preveri, če smo še vedno znotraj mreže
                         if 0 <= ni < grid.shape[0] and 0 <= nj < grid.shape[1]:
                             if grid[ni, nj] == EMPTY:
                                 new_grid[i, j] = EMPTY
                                 new_grid[ni, nj] = SAND
-                                break  # Premik izveden - ne preverjaj več
+                                break  # Premik izveden
 
-                    # 4. Če ni nobene možnosti za premik, ostane na mestu
+                    # 5️⃣ Če ni nobene možnosti za premik, ostane na mestu
                     else:
                         new_grid[i, j] = SAND
-
 
             elif grid[i, j] == WOOD:
                 # 1. Fall down if there is space
@@ -109,6 +128,22 @@ def generate_next_gen(grid, steps, water_amount):
                         (j > 0 and grid[i, j - 1] == FIRE) or \
                         (j < cols - 1 and grid[i, j + 1] == FIRE):
                     new_grid[i, j] = FIRE
+
+                if i > 0 and grid[i - 1, j] == WATER:
+                    new_grid[i - 1, j] = WOOD
+                    new_grid[i, j] = WATER
+                    water_amount[i, j] = min(water_amount[i, j] + 0.5, 1.0)
+
+                    # 3️⃣ Preveri, če je les ujet med celicami z 100% vode (za dodatno preverbo)
+                left_full = j > 0 and grid[i, j - 1] == WATER and water_amount[i, j - 1] >= 1.0
+                right_full = j < cols - 1 and grid[i, j + 1] == WATER and water_amount[i, j + 1] >= 1.0
+
+                if left_full or right_full:
+                    if i > 0 and grid[i - 1, j] == EMPTY:
+                        new_grid[i - 1, j] = WOOD
+                        new_grid[i, j] = WATER
+                        water_amount[i, j] = min(water_amount[i, j] + 0.5, 1.0)
+                        continue
 
             elif grid[i, j] == FIRE:
                 # 1. Fire moves downwards
@@ -234,8 +269,8 @@ def draw_grid(grid):
     return img
 
 # Function for animating the simulation
-def animate(frame_num, grid, img, steps):
-    new_grid = generate_next_gen(grid, steps)
+def animate(frame_num, grid, img, steps, water_amount):
+    new_grid = generate_next_gen(grid, steps, water_amount)
     img.set_data(draw_grid(new_grid))
     grid[:] = new_grid
     return img,

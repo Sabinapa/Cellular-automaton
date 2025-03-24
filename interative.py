@@ -155,7 +155,7 @@ def run_interactive_simulation(grid_size, steps):
     plt.show()
 
 if __name__ == "__main__":
-    size = 20
+    size = 10
     steps = 50
     smoke_life = np.zeros((size, size), dtype=int)
     run_interactive_simulation(size, steps)
