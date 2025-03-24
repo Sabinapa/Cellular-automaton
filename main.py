@@ -3,6 +3,8 @@ from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 from one import plot_automaton_1d
 from two import create_initial_state_2d, animate
+from avatar import create_initial_state, draw_grid, animate, create_test_environment
+from interative import run_interactive_simulation
 
 # Main Program
 if __name__ == "__main__":
@@ -33,3 +35,36 @@ if __name__ == "__main__":
 
         plt.title("2D Cellular Automaton - Rule B678/S2345678")
         plt.show()
+
+    elif automaton_type == "3":
+        size = 20
+        steps = 50
+
+        initial_state = create_initial_state(size)
+
+        fig, ax = plt.subplots()
+        img = ax.imshow(draw_grid(initial_state))
+        ani = animation.FuncAnimation(fig, animate, fargs=(initial_state, img, steps), frames=steps, interval=70, repeat=False)
+
+        plt.title("2D Cellular Automaton - Sand, Wood, Fire, and Smoke")
+        plt.show()
+
+    elif automaton_type == "4":
+        size = 20
+        steps = 100
+
+        initial_state = create_test_environment(size)
+        smoke_life = np.zeros((size, size), dtype=int)
+
+        fig, ax = plt.subplots()
+        img = ax.imshow(draw_grid(initial_state))
+        ani = animation.FuncAnimation(fig, animate, fargs=(initial_state, img, steps), frames=steps, interval=70, repeat=False)
+
+        plt.title("Testno okolje - Pesek, Les, Ogenj in Dim")
+        plt.show()
+
+    elif automaton_type == "5":
+        size = 20
+        steps = 100
+        run_interactive_simulation(size, steps)
+
