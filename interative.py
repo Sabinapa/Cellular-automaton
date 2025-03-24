@@ -13,6 +13,7 @@ FIRE = 4
 SMOKE_DARK = 5
 SMOKE_LIGHT = 6
 WATER = 7
+ICE = 8
 
 # Element labels for buttons
 element_labels = {
@@ -21,7 +22,8 @@ element_labels = {
     SAND: "Pesek",
     WOOD: "Les",
     FIRE: "Ogenj",
-    WATER: "Voda"
+    WATER: "Voda",
+    ICE: "Led"
 }
 
 textures = {
@@ -37,7 +39,8 @@ textures = {
         np.array(Image.open("tiles/medium_blue.png").convert("RGB")),
         np.array(Image.open("tiles/dark_blue.png").convert("RGB")),
         np.array(Image.open("tiles/full_blue.png").convert("RGB")),
-    ]
+    ],
+    ICE: np.array(Image.open("tiles/ice.png").convert("RGB"))
 }
 
 # Global variables

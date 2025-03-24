@@ -12,6 +12,7 @@ FIRE = 4
 SMOKE_DARK = 5
 SMOKE_LIGHT = 6
 WATER = 7
+ICE = 8
 
 textures = {
     EMPTY: np.array(Image.open("tiles/empty.png").convert("RGB")),
@@ -26,7 +27,8 @@ textures = {
         np.array(Image.open("tiles/medium_blue.png").convert("RGB")),
         np.array(Image.open("tiles/dark_blue.png").convert("RGB")),
         np.array(Image.open("tiles/full_blue.png").convert("RGB")),
-    ]
+    ],
+ICE: np.array(Image.open("tiles/ice.png").convert("RGB"))
 }
 
 smoke_life = None
@@ -35,9 +37,11 @@ water_amount = None
 # Function for creating initial 2D state
 def create_initial_state(size):
     global smoke_life, water_amount
-    grid = np.random.choice([EMPTY, WALL, SAND, WOOD, FIRE, WATER],
+    grid = np.random.choice([EMPTY, WALL, SAND, WOOD, FIRE],
+    #grid=np.random.choice([EMPTY, WALL, SAND, WOOD, FIRE, WATER, ICE],
                             size=(size, size),
-                            p=[0.2, 0.2, 0.1, 0.1, 0.1, 0.3])
+    #                        p=[0.2, 0.2, 0.1, 0.1, 0.1, 0.2, 0.1])
+                             p = [0.2, 0.2, 0.2, 0.2, 0.2])
 
     global smoke_life  # Spremenljivko označi kot globalno
     smoke_life = np.zeros((size, size), dtype=int)
@@ -243,6 +247,31 @@ def generate_next_gen(grid, steps, water_amount):
                         if water_amount[i, j] == 0:
                             new_grid[i, j] = EMPTY
 
+            elif grid[i, j] == ICE:
+                # 🔥 1. Led se stopi v stik z ognjem in postane voda (0.25)
+                if (
+                        (i > 0 and grid[i - 1, j] == FIRE) or
+                        (i < rows - 1 and grid[i + 1, j] == FIRE) or
+                        (j > 0 and grid[i, j - 1] == FIRE) or
+                        (j < cols - 1 and grid[i, j + 1] == FIRE)
+                ):
+                    new_grid[i, j] = WATER
+                    water_amount[i, j] = 0.25
+                    continue
+
+                # ⬇️ 2. Led pade dol, dokler ne naleti na oviro
+                if i < rows - 1 and grid[i + 1, j] == EMPTY:
+                    new_grid[i, j] = EMPTY
+                    new_grid[i + 1, j] = ICE
+                    continue
+
+                # ❄️ 3. Led zamrzne sosednje celice z vodo
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  # Levo, Desno, Gor, Dol
+                    ni, nj = i + dx, j + dy
+                    if 0 <= ni < rows and 0 <= nj < cols:
+                        if grid[ni, nj] == WATER:
+                            new_grid[ni, nj] = ICE
+
     return new_grid
 
 # Function to draw the grid with textures
@@ -274,7 +303,6 @@ def animate(frame_num, grid, img, steps, water_amount):
     img.set_data(draw_grid(new_grid))
     grid[:] = new_grid
     return img,
-
 
 def create_test_environment(size):
     global smoke_life, water_amount

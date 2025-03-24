@@ -38,13 +38,14 @@ if __name__ == "__main__":
 
     elif automaton_type == "3":
         size = 20
-        steps = 50
+        steps = 100
 
         initial_state = create_initial_state(size)
+        water_amount = np.zeros((size, size), dtype=float)
 
         fig, ax = plt.subplots()
         img = ax.imshow(draw_grid(initial_state))
-        ani = animation.FuncAnimation(fig, animate, fargs=(initial_state, img, steps), frames=steps, interval=70, repeat=False)
+        ani = animation.FuncAnimation(fig, animate, fargs=(initial_state, img, steps, water_amount), frames=steps, interval=70, repeat=False)
 
         plt.title("2D Cellular Automaton - Sand, Wood, Fire, and Smoke")
         plt.show()
@@ -55,10 +56,11 @@ if __name__ == "__main__":
 
         initial_state = create_test_environment(size)
         smoke_life = np.zeros((size, size), dtype=int)
+        water_amount = np.zeros((size, size), dtype=float)
 
         fig, ax = plt.subplots()
         img = ax.imshow(draw_grid(initial_state))
-        ani = animation.FuncAnimation(fig, animate, fargs=(initial_state, img, steps), frames=steps, interval=70, repeat=False)
+        ani = animation.FuncAnimation(fig, animate, fargs=(initial_state, img, steps, water_amount), frames=steps, interval=70, repeat=False)
 
         plt.title("Testno okolje - Pesek, Les, Ogenj in Dim")
         plt.show()
