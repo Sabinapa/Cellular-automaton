@@ -3,14 +3,15 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 from matplotlib import animation
 from PIL import Image
-from avatar import generate_next_gen, draw_grid  # Uporaba funkcij iz avatar.py
+from avatar import generate_next_gen, draw_grid
 
-# Constants for cell states
 EMPTY = 0
 WALL = 1
 SAND = 2
 WOOD = 3
 FIRE = 4
+SMOKE_DARK = 5
+SMOKE_LIGHT = 6
 
 # Element labels for buttons
 element_labels = {
@@ -18,21 +19,22 @@ element_labels = {
     WALL: "Stena",
     SAND: "Pesek",
     WOOD: "Les",
-    FIRE: "Ogenj"
+    FIRE: "Ogenj",
 }
 
-# Load textures for each element
 textures = {
     EMPTY: np.array(Image.open("tiles/empty.png").convert("RGB")),
     WALL: np.array(Image.open("tiles/wall.png").convert("RGB")),
     SAND: np.array(Image.open("tiles/sand.png").convert("RGB")),
     WOOD: np.array(Image.open("tiles/wood.png").convert("RGB")),
     FIRE: np.array(Image.open("tiles/fire.png").convert("RGB")),
+    SMOKE_DARK: np.array(Image.open("tiles/smoke_dark.png").convert("RGB")),
+    SMOKE_LIGHT: np.array(Image.open("tiles/smoke_light.png").convert("RGB"))
 }
 
 # Global variables
 selected_element = EMPTY
-grid = None  # Mreža bo ustvarjena v glavni funkciji
+grid = None  # Grid is created in run_interactive_simulation
 
 # Function to set the selected element
 def set_element(element):
@@ -40,25 +42,25 @@ def set_element(element):
     selected_element = element
     print(f"Izbran element: {element_labels[element]}")
 
-def start_simulation(event):
-    global grid  # Popravek: Uporabi globalno spremenljivko
+def start_simulation(steps):
+    global grid, ani
     print("Začel bom simulacijo...")
 
     fig, ax = plt.subplots()
 
     def animate(frame_num):
-        grid[:] = generate_next_gen(grid)  # Posodobi mrežo neposredno
+        global grid, smoke_life
+        grid[:] = generate_next_gen(grid, steps)  # Update grid
         draw_grid(ax, len(grid))
         plt.draw()
 
-    global ani  # Dodano: Da se animacija ohrani v spominu
-    ani = animation.FuncAnimation(fig, animate, frames=50, interval=200)
+    ani = animation.FuncAnimation(fig, animate, frames=steps, interval=300)
     plt.show()
 
 
 # Function to draw the grid with textures
 def draw_grid(ax_grid, grid_size):
-    ax_grid.clear()  # Očisti mrežo pred ponovnim risanjem
+    ax_grid.clear()
     img = np.zeros((grid_size * 32, grid_size * 32, 3), dtype=np.uint8)
     for i in range(grid_size):
         for j in range(grid_size):
@@ -66,7 +68,7 @@ def draw_grid(ax_grid, grid_size):
 
     ax_grid.imshow(img)
 
-    # Dodaj mrežne črte
+    # Set grid lines
     ax_grid.set_xticks(np.arange(0, grid_size * 32, 32))
     ax_grid.set_yticks(np.arange(0, grid_size * 32, 32))
     ax_grid.grid(True, color='black', linewidth=0.5)
@@ -81,15 +83,17 @@ def on_click(event, ax_grid, grid_size):
             draw_grid(ax_grid, grid_size)
             plt.draw()
 
-# Main interactive simulation
+
 def run_interactive_simulation(grid_size, steps):
-    global grid
-    grid = np.full((grid_size, grid_size), EMPTY)  # Mreža se ustvari tu
+    global grid, smoke_life
+    grid = np.full((grid_size, grid_size), EMPTY)  # Create empty grid
 
     grid[0, :] = WALL  # Zgornji rob
     grid[-1, :] = WALL  # Spodnji rob
     grid[:, 0] = WALL  # Levi rob
     grid[:, -1] = WALL  # Desni rob
+
+    smoke_life = np.zeros((grid_size, grid_size), dtype=int)
 
     # Setup figure
     fig, (ax_buttons, ax_grid) = plt.subplots(1, 2, figsize=(10, 6))
@@ -105,7 +109,7 @@ def run_interactive_simulation(grid_size, steps):
 
     # Add "Start Simulation" button
     start_btn = Button(plt.axes([0.02, 0.1, 0.13, 0.08]), 'Začni simulacijo')
-    start_btn.on_clicked(start_simulation)
+    start_btn.on_clicked(lambda _: start_simulation(steps))
 
     # Draw initial grid
     draw_grid(ax_grid, grid_size)
@@ -115,7 +119,7 @@ def run_interactive_simulation(grid_size, steps):
     plt.show()
 
 if __name__ == "__main__":
-    size = 10
-    steps = 100
+    size = 20
+    steps = 50
     smoke_life = np.zeros((size, size), dtype=int)
     run_interactive_simulation(size, steps)
