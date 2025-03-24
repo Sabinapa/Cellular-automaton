@@ -12,6 +12,7 @@ WOOD = 3
 FIRE = 4
 SMOKE_DARK = 5
 SMOKE_LIGHT = 6
+WATER = 7
 
 # Element labels for buttons
 element_labels = {
@@ -20,6 +21,7 @@ element_labels = {
     SAND: "Pesek",
     WOOD: "Les",
     FIRE: "Ogenj",
+    WATER: "Voda"
 }
 
 textures = {
@@ -29,12 +31,19 @@ textures = {
     WOOD: np.array(Image.open("tiles/wood.png").convert("RGB")),
     FIRE: np.array(Image.open("tiles/fire.png").convert("RGB")),
     SMOKE_DARK: np.array(Image.open("tiles/smoke_dark.png").convert("RGB")),
-    SMOKE_LIGHT: np.array(Image.open("tiles/smoke_light.png").convert("RGB"))
+    SMOKE_LIGHT: np.array(Image.open("tiles/smoke_light.png").convert("RGB")),
+    WATER: [
+        np.array(Image.open("tiles/light_blue.png").convert("RGB")),
+        np.array(Image.open("tiles/medium_blue.png").convert("RGB")),
+        np.array(Image.open("tiles/dark_blue.png").convert("RGB")),
+        np.array(Image.open("tiles/full_blue.png").convert("RGB")),
+    ]
 }
 
 # Global variables
 selected_element = EMPTY
 grid = None  # Grid is created in run_interactive_simulation
+water_amount = None
 
 # Function to set the selected element
 def set_element(element):
@@ -49,8 +58,8 @@ def start_simulation(steps):
     fig, ax = plt.subplots()
 
     def animate(frame_num):
-        global grid, smoke_life
-        grid[:] = generate_next_gen(grid, steps)  # Update grid
+        global grid, smoke_life, water_amount
+        grid[:] = generate_next_gen(grid, steps, water_amount)  # Update grid
         draw_grid(ax, len(grid))
         plt.draw()
 
@@ -60,11 +69,29 @@ def start_simulation(steps):
 
 # Function to draw the grid with textures
 def draw_grid(ax_grid, grid_size):
+    global water_amount
+    if water_amount is None:
+        water_amount = np.zeros((grid_size, grid_size), dtype=float)
+
     ax_grid.clear()
     img = np.zeros((grid_size * 32, grid_size * 32, 3), dtype=np.uint8)
     for i in range(grid_size):
         for j in range(grid_size):
-            img[i * 32:(i + 1) * 32, j * 32:(j + 1) * 32] = textures[grid[i, j]]
+            if grid[i, j] == WATER:
+                water_level = water_amount[i, j]
+                print(f"Risanje celice ({i}, {j}) z nivojem {water_level:.2f} vode.")  # Dodan izpis
+                if water_level <= 0.25:
+                    cell_texture = textures[WATER][0]  # 1/4 polna celica
+                elif water_level <= 0.5:
+                    cell_texture = textures[WATER][1]  # 1/2 polna celica
+                elif water_level <= 0.75:
+                    cell_texture = textures[WATER][2]  # 3/4 polna celica
+                else:
+                    cell_texture = textures[WATER][3]  # Polna celica
+
+                img[i * 32:(i + 1) * 32, j * 32:(j + 1) * 32] = cell_texture
+            else:
+                img[i * 32:(i + 1) * 32, j * 32:(j + 1) * 32] = textures[grid[i, j]]
 
     ax_grid.imshow(img)
 
@@ -79,13 +106,21 @@ def on_click(event, ax_grid, grid_size):
     if event.inaxes == ax_grid:
         x, y = int(event.xdata // 32), int(event.ydata // 32)
         if 0 <= x < grid_size and 0 <= y < grid_size:
-            grid[y, x] = selected_element
+            if selected_element == WATER:
+                if grid[y, x] == WATER:
+                    water_amount[y, x] = min(water_amount[y, x] + 0.25, 1.5)  # Dvigni nivo vode do 150%
+                else:
+                    grid[y, x] = WATER
+                    water_amount[y, x] = 0.25  # Prvotni klik postavi začetni nivo vode
+            else:
+                grid[y, x] = selected_element
+
             draw_grid(ax_grid, grid_size)
             plt.draw()
 
 
 def run_interactive_simulation(grid_size, steps):
-    global grid, smoke_life
+    global grid, smoke_life, water_amount
     grid = np.full((grid_size, grid_size), EMPTY)  # Create empty grid
 
     grid[0, :] = WALL  # Zgornji rob
@@ -94,6 +129,7 @@ def run_interactive_simulation(grid_size, steps):
     grid[:, -1] = WALL  # Desni rob
 
     smoke_life = np.zeros((grid_size, grid_size), dtype=int)
+    water_amount = np.zeros((grid_size, grid_size), dtype=float)
 
     # Setup figure
     fig, (ax_buttons, ax_grid) = plt.subplots(1, 2, figsize=(10, 6))
