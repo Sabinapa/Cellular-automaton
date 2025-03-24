@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 from one import plot_automaton_1d
-from two import create_initial_state_2d, animate
+from two import create_initial_state_2d, animate2
 from avatar import create_initial_state, draw_grid, animate, create_test_environment
 from interative import run_interactive_simulation
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         img = ax.imshow(initial_state, cmap='gray')
         stable_counter = [0]
         ani = animation.FuncAnimation(fig,
-                                      lambda frame_num: animate(frame_num, initial_state, img, stable_counter, ani),
+                                      lambda frame_num: animate2(frame_num, initial_state, img, stable_counter, ani),
                                       frames=steps, interval=70, repeat=False)
 
         plt.title("2D Cellular Automaton - Rule B678/S2345678")

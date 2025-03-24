@@ -28,7 +28,7 @@ def generate_next_gen_2d(grid):
     return new_grid
 
 # Function for animating 2D automaton
-def animate(frame_num, grid, img, stable_counter, ani):
+def animate2(frame_num, grid, img, stable_counter, ani):
     new_grid = generate_next_gen_2d(grid)
     img.set_data(new_grid)
 
