@@ -43,9 +43,8 @@ textures = {
     ICE: np.array(Image.open("tiles/ice.png").convert("RGB"))
 }
 
-# Global variables
 selected_element = EMPTY
-grid = None  # Grid is created in run_interactive_simulation
+grid = None
 water_amount = None
 
 # Function to set the selected element
@@ -82,7 +81,7 @@ def draw_grid(ax_grid, grid_size):
         for j in range(grid_size):
             if grid[i, j] == WATER:
                 water_level = water_amount[i, j]
-                print(f"Risanje celice ({i}, {j}) z nivojem {water_level:.2f} vode.")  # Dodan izpis
+                #print(f"Risanje celice ({i}, {j}) z nivojem {water_level:.2f} vode.")  # Dodan izpis
                 if water_level <= 0.25:
                     cell_texture = textures[WATER][0]  # 1/4 polna celica
                 elif water_level <= 0.5:
@@ -109,12 +108,12 @@ def on_click(event, ax_grid, grid_size):
     if event.inaxes == ax_grid:
         x, y = int(event.xdata // 32), int(event.ydata // 32)
         if 0 <= x < grid_size and 0 <= y < grid_size:
-            if selected_element == WATER:
+            if selected_element == WATER: # Water is a special case
                 if grid[y, x] == WATER:
-                    water_amount[y, x] = min(water_amount[y, x] + 0.25, 1.5)  # Dvigni nivo vode do 150%
+                    water_amount[y, x] = min(water_amount[y, x] + 0.25, 1.5)  # add 1/4 water
                 else:
                     grid[y, x] = WATER
-                    water_amount[y, x] = 0.25  # Prvotni klik postavi začetni nivo vode
+                    water_amount[y, x] = 0.25  # On first click, set water level to 1/4
             else:
                 grid[y, x] = selected_element
 
@@ -126,10 +125,11 @@ def run_interactive_simulation(grid_size, steps):
     global grid, smoke_life, water_amount
     grid = np.full((grid_size, grid_size), EMPTY)  # Create empty grid
 
-    grid[0, :] = WALL  # Zgornji rob
-    grid[-1, :] = WALL  # Spodnji rob
-    grid[:, 0] = WALL  # Levi rob
-    grid[:, -1] = WALL  # Desni rob
+    # Add walls around the grid
+    grid[0, :] = WALL
+    grid[-1, :] = WALL
+    grid[:, 0] = WALL
+    grid[:, -1] = WALL
 
     smoke_life = np.zeros((grid_size, grid_size), dtype=int)
     water_amount = np.zeros((grid_size, grid_size), dtype=float)
