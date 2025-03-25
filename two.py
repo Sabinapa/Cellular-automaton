@@ -1,6 +1,4 @@
 import numpy as np
-from matplotlib import pyplot as plt
-import matplotlib.animation as animation
 
 # Function for creating initial 2D state
 def create_initial_state_2d(size, fill_ratio=0.45):
@@ -10,21 +8,18 @@ def create_initial_state_2d(size, fill_ratio=0.45):
 
 # Function for generating next generation for 2D automaton
 def generate_next_gen_2d(grid):
-    new_grid = np.copy(grid)
+    new_grid = np.copy(grid) # Copy the grid
     rows, cols = grid.shape
 
     for i in range(1, rows-1):  # Ignore the fixed border
         for j in range(1, cols-1):
-            # Count live neighbors
-            neighbors = np.sum(grid[i-1:i+2, j-1:j+2]) - grid[i, j]
-
+            neighbors = np.sum(grid[i-1:i+2, j-1:j+2]) - grid[i, j] # Sum of all neighbors except the cell itself
             if grid[i, j] == 1:  # Alive cell
                 if neighbors < 2 or neighbors > 8:
                     new_grid[i, j] = 0  # Cell dies
             else:  # Dead cell
                 if neighbors in [6, 7, 8]:
                     new_grid[i, j] = 1  # Cell is born
-
     return new_grid
 
 # Function for animating 2D automaton
@@ -41,6 +36,5 @@ def animate2(frame_num, grid, img, stable_counter, ani):
     if stable_counter[0] >= 15:  # Stop after 15 stable generations
         print("Stanje se je stabiliziralo po 15 stabilnih generacijah.")
         ani.event_source.stop()
-
     grid[:] = new_grid
     return img,
