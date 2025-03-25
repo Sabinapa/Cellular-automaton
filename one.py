@@ -7,20 +7,19 @@ def get_rule_binary(rule_number):
 
 # Function for generating next generation based on the rule
 def generate_next_gen_1d(current_gen, rule_binary):
-    padded_gen = np.pad(current_gen, 1, mode='constant')  # Add padding to the current generation
+    padded_gen = np.pad(current_gen, 1, mode='constant')  # Add padding to the current generation  0 1 0 1 0
     next_gen = np.zeros_like(current_gen)
 
     for i in range(len(current_gen)):
-        neighborhood = padded_gen[i:i+3]  # Neighborhood of the current cell
-        idx = 7 - int(''.join(map(str, neighborhood)), 2)  # Index of the rule
+        neighborhood = padded_gen[i:i+3]  # Neighborhood of the current cell left, center, right
+        idx = 7 - int(''.join(map(str, neighborhood)), 2)  # [1 0 1] -> ['1', '0', '1'] -> '101' -> 5
         next_gen[i] = rule_binary[idx]  # Apply the rule
-
     return next_gen
 
 # Function for plotting the 1D automaton
 def plot_automaton_1d(initial_gen, rule_number, steps=50):
     rule_binary = get_rule_binary(rule_number)
-    generations = [initial_gen]
+    generations = [initial_gen] # List to store all generations
 
     for _ in range(steps - 1):
         generations.append(generate_next_gen_1d(generations[-1], rule_binary))
