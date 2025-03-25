@@ -7,7 +7,7 @@ from avatar import create_initial_state, draw_grid, animate, create_test_environ
 from interative import run_interactive_simulation
 
 if __name__ == "__main__":
-    automaton_type = input("Izberite vrsto avtomata) (1/2/3/4) ").strip().lower()
+    automaton_type = input("Izberite vrsto avtomata) (1/2/3/4): ").strip().lower()
 
     if automaton_type == "1":
         rule_number = int(input("Vnesite pravilo (0-255): "))
@@ -63,8 +63,4 @@ if __name__ == "__main__":
         plt.title("Testno okolje - Pesek, Les, Ogenj in Dim")
         plt.show()
 
-    elif automaton_type == "5":
-        size = 20
-        steps = 100
-        run_interactive_simulation(size, steps)
 
