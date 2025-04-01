@@ -246,17 +246,17 @@ def generate_next_gen(grid, steps, water_amount):
                     water_amount[i, j] = 0
                     new_grid[i, j] = EMPTY
 
-                # 4. Move up if neighboring cells are full 100%
+                # 4. Move down if any neighboring cells below are not full (less than 100%)
                 if i < rows - 1 and grid[i + 1, j] in [WATER]: # Check if the cell below is water
                     bottom_not_full = False
                     for dx in [-1, 0, 1]:  # left, center, right
                         ni, nj = i + 1, j + dx
                         if 0 <= ni < rows and 0 <= nj < cols:
                             if grid[ni, nj] == WATER and water_amount[ni, nj] < 1.0: # Check if the cell is full
-                                bottom_not_full = True
+                                bottom_not_full = True # downstairs cell is not full
                                 break
 
-                    # If the bottom is not full, transfer water up
+                    # if there is empty space below, move water down
                     if bottom_not_full:
                         transfer = min(water_amount[i, j], 1.0 - water_amount[i + 1, j])
                         water_amount[i, j] -= transfer
